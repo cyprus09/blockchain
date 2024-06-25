@@ -33,5 +33,5 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 
 // NewGenesisBlock creates and returns the genesis block (first block of the blockchain)
 func NewGenesisBlock() *Block {
-	return NewBlock("New Genesis Block", []byte{})
+	return NewBlock("Genesis Block", []byte{})
 }
