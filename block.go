@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
+	"log"
 	"time"
 )
 
@@ -23,6 +26,18 @@ type Block struct {
 // 	b.CurrHash = hash[:]
 // }
 
+// SerializeBlock serializes the value of the block to be able to store in BoltDb
+func (b *Block) SerializeBlock() []byte {
+	var result bytes.Buffer
+	encoder := gob.NewEncoder(&result)
+
+	if err := encoder.Encode(b); err != nil {
+		log.Panic(err)
+	}
+
+	return result.Bytes()
+}
+
 // NewBlock creates and returns a new Block
 func NewBlock(data string, prevBlockHash []byte) *Block {
 	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}, 0}
@@ -38,4 +53,16 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 // NewGenesisBlock creates and returns the genesis block (first block of the blockchain)
 func NewGenesisBlock() *Block {
 	return NewBlock("Genesis Block", []byte{})
+}
+
+// DeserializeBlock deserializes the block value got from the db
+func DeserializeBlock(d []byte) *Block {
+	var block Block
+
+	decoder := gob.NewDecoder(bytes.NewReader(d))
+	if err := decoder.Decode(&block); err != nil {
+		log.Panic(err)
+	}
+
+	return &block
 }
