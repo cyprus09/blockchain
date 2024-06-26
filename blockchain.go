@@ -42,7 +42,7 @@ func (bc *Blockchain) AddBlock(data string) {
 	err = bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 
-		err := b.Put(newBlock.CurrHash, newBlock.SerializeBlock())
+		err = b.Put(newBlock.CurrHash, newBlock.SerializeBlock())
 		if err != nil {
 			log.Panic(err)
 		}
