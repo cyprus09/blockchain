@@ -31,7 +31,8 @@ func (b *Block) SerializeBlock() []byte {
 	var result bytes.Buffer
 	encoder := gob.NewEncoder(&result)
 
-	if err := encoder.Encode(b); err != nil {
+	err := encoder.Encode(b)
+	if err != nil {
 		log.Panic(err)
 	}
 
@@ -60,7 +61,8 @@ func DeserializeBlock(d []byte) *Block {
 	var block Block
 
 	decoder := gob.NewDecoder(bytes.NewReader(d))
-	if err := decoder.Decode(&block); err != nil {
+	err := decoder.Decode(&block)
+	if err != nil {
 		log.Panic(err)
 	}
 

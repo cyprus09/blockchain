@@ -21,6 +21,14 @@ func (cli *CLI) printUsage() {
 	fmt.Println("  printchain                   :  Displays all the blocks in the blockchain in order.")
 }
 
+// validateArgs helps in validating the number of arguments within the cli
+func (cli *CLI) validateArgs() {
+	if len(os.Args) < 2 {
+		cli.printUsage()
+		os.Exit(1)
+	}
+}
+
 // addBlock implements the cli command for adding block through the cli
 func (cli *CLI) addBlock(data string) {
 	cli.bc.AddBlock(data)
@@ -47,13 +55,6 @@ func (cli *CLI) printChain() {
 	}
 }
 
-// validateArgs helps in validating the number of arguments within the cli
-func (cli *CLI) validateArgs() {
-	if len(os.Args) < 2 {
-		cli.printUsage()
-		os.Exit(1)
-	}
-}
 
 // Run parses the cli arguments and processes these commands
 func (cli *CLI) Run() {
