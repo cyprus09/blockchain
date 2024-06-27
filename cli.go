@@ -15,9 +15,10 @@ type CLI struct {
 
 // printUsage prints all the available commands with their usage
 func (cli *CLI) printUsage() {
-	fmt.Println("Usage: ")
-	fmt.Println("addblock -data BLOCK_DATA - add a block to the blockchain")
-	fmt.Println("printchain - print all the blocks of the blockchain")
+	fmt.Println("Commands:")
+	fmt.Println("  addblock -data <block-data>  :  Adds a new block to the blockchain.")
+	fmt.Println("")
+	fmt.Println("  printchain                   :  Displays all the blocks in the blockchain in order.")
 }
 
 // addBlock implements the cli command for adding block through the cli

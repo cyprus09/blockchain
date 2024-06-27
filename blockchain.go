@@ -81,6 +81,8 @@ func (i *BlockchainIterator) Next() *Block {
 		log.Panic(err)
 	}
 
+	i.currHash = block.PrevBlockHash
+
 	return block
 }
 
@@ -110,21 +112,18 @@ func NewBlockChain() *Blockchain {
 				log.Panic(err)
 			}
 
-			err = b.Put(genesis.CurrHash, genesis.SerializeBlock())
-			if err != nil {
-				log.Panic(err)
-			}
-
 			err = b.Put([]byte("l"), genesis.CurrHash)
 			if err != nil {
 				log.Panic(err)
 			}
+
 			tip = genesis.CurrHash
 		} else {
 			tip = b.Get([]byte("l"))
 		}
 		return nil
 	})
+
 	if err != nil {
 		log.Panic(err)
 	}
