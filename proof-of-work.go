@@ -34,10 +34,10 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
 			pow.block.PrevBlockHash,
-			pow.block.BlockData,
-			IntToHex(pow.block.Timestamp),
-			IntToHex(int64(targetBits)),
-			IntToHex(int64(nonce)),
+			pow.block.HashTransactions(),
+			IntToBytes(pow.block.Timestamp),
+			IntToBytes(int64(targetBits)),
+			IntToBytes(int64(nonce)),
 		},
 		[]byte{},
 	)
@@ -47,16 +47,17 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 // Run performs the proof of work from the data generated from prepareData
 func (pow *ProofOfWork) Run() (int, []byte) {
 	var hashInt big.Int
-	var hash [32]byte
+	var hashValue [32]byte
 
 	nonce := 0
 
-	fmt.Printf("Mining the block now containing: \"%s\"\n", pow.block.BlockData)
+	fmt.Printf("Mining new block now...")
 	for nonce < maxNonce {
 		data := pow.prepareData(nonce)
-		hash = sha256.Sum256(data)
-		fmt.Printf("\r%x", hash)
-		hashInt.SetBytes(hash[:])
+
+		hashValue = sha256.Sum256(data)
+		fmt.Printf("\r%x", hashValue)
+		hashInt.SetBytes(hashValue[:])
 
 		if hashInt.Cmp(pow.target) == -1 {
 			break
@@ -64,8 +65,9 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 			nonce++
 		}
 	}
+
 	fmt.Print("\n\n")
-	return nonce, hash[:]
+	return nonce, hashValue[:]
 }
 
 // Validate validates the block's PoW which takes way lesser time than the actual process of generating the hash

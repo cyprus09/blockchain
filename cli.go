@@ -9,16 +9,38 @@ import (
 )
 
 // CLI struct helps process command line arguments
-type CLI struct {
-	bc *Blockchain
+type CLI struct {}
+
+func (cli *CLI) createBlockchain(address string) {
+	bc := CreateBlockchain(address)
+	bc.db.Close()
+	fmt.Println("Blockchain creation successful.")
+}
+
+func (cli *CLI) getBalance(address string) {
+	bc := NewBlockChain(address)
+	defer bc.db.Close()
+
+	balance := 0
+	UTXOs := bc.FindUTXO(address)
+
+	for _, out := range UTXOs {
+		balance += out.Value
+	}
+
+	fmt.Println("Balance of '%s': %d\n", address, balance)
 }
 
 // printUsage prints all the available commands with their usage
 func (cli *CLI) printUsage() {
 	fmt.Println("Commands:")
-	fmt.Println("  addblock -data <block-data>  :  Adds a new block to the blockchain.")
+	fmt.Println("  getbalance -address <address> : Get balance of address")
+	fmt.Println("")
+	fmt.Println("  createblockchain -address <address> - Create a blockchain and genesis block reward to address")
 	fmt.Println("")
 	fmt.Println("  printchain                   :  Displays all the blocks in the blockchain in order.")
+	fmt.Println("")
+	fmt.Println()
 }
 
 // validateArgs helps in validating the number of arguments within the cli
