@@ -48,7 +48,6 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 func (pow *ProofOfWork) Run() (int, []byte) {
 	var hashInt big.Int
 	var hashValue [32]byte
-
 	nonce := 0
 
 	fmt.Printf("Mining new block now...")

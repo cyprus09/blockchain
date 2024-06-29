@@ -102,6 +102,7 @@ func (bc *Blockchain) FindUnspentTransactions(address string) []Transaction {
 				}
 			}
 		}
+		
 		if len(block.PrevBlockHash) == 0 {
 			break
 		}
@@ -188,7 +189,7 @@ func dbExists() bool {
 
 // NewBlockChain creates a new Blockchain with the genesis block
 func NewBlockChain(address string) *Blockchain {
-	if dbExists() == false {
+	if !dbExists() {
 		fmt.Println("No existing blockchain found. Create one first.")
 		os.Exit(1)
 	}

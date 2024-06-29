@@ -28,7 +28,8 @@ func (cli *CLI) getBalance(address string) {
 		balance += out.Value
 	}
 
-	fmt.Println("Balance of '%s': %d\n", address, balance)
+	fmt.Printf("Balance of '%s': %d\n", address, balance)
+	fmt.Println()
 }
 
 // printUsage prints all the available commands with their usage
@@ -95,8 +96,8 @@ func (cli *CLI) Run() {
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
-	sendFrom := sendCoinCmd.String("to", "", "Source wallet address")
-	sendTo := sendCoinCmd.String("from", "", "Destination wallet address")
+	sendFrom := sendCoinCmd.String("from", "", "Source wallet address")
+	sendTo := sendCoinCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCoinCmd.Int("amount", 0, "Amount to send")
 
 	switch os.Args[1] {
@@ -105,19 +106,16 @@ func (cli *CLI) Run() {
 		if err != nil {
 			log.Panic(err)
 		}
-
 	case "createblockchain":
 		err := createBlockchainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
-
 	case "printChain":
 		err := printChainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
-
 	case "sendcoin":
 		err := sendCoinCmd.Parse(os.Args[2:])
 		if err != nil {
