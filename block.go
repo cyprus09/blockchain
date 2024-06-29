@@ -2,7 +2,8 @@ package main
 
 import (
 	"bytes"
-	"encoding/gob"
+	"crypto/sha256"
+	"encoding/gob" //gob is the library used for encoding data (serialisation which can be done through protobufs as well for data streams in binary format
 	"log"
 	"time"
 )
@@ -10,7 +11,7 @@ import (
 // Block struct helps define the structure of a block
 type Block struct {
 	Timestamp     int64
-	BlockData     []byte
+	Transactions  []*Transaction
 	PrevBlockHash []byte
 	CurrHash      []byte
 	Nonce         int
@@ -39,9 +40,23 @@ func (b *Block) SerializeBlock() []byte {
 	return result.Bytes()
 }
 
+// HashTransaction return a hash of the transaction within a block
+func (b *Block) HashTransactions() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
+
+	for _, tx := range b.Transactions {
+		txHashes = append(txHashes, tx.ID)
+	}
+
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+
+	return txHash[:]
+}
+
 // NewBlock creates and returns a new Block
-func NewBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}, 0}
+func NewBlock(transactions []*Transaction, prevBlockHash []byte) *Block {
+	block := &Block{time.Now().Unix(), transactions, prevBlockHash, []byte{}, 0}
 	pow := NewProofOfWork(block)
 	nonce, currHash := pow.Run()
 
@@ -52,8 +67,8 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 }
 
 // NewGenesisBlock creates and returns the genesis block (first block of the blockchain)
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis Block", []byte{})
+func NewGenesisBlock(coinbase *Transaction) *Block {
+	return NewBlock([]*Transaction{coinbase}, []byte{})
 }
 
 // DeserializeBlock deserializes the block value got from the db
