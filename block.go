@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"encoding/gob"
+	"encoding/gob" //gob is the library used for encoding data (serialisation which can be done through protobufs as well for data streams in binary format
 	"log"
 	"time"
 )
@@ -38,6 +38,16 @@ func (b *Block) SerializeBlock() []byte {
 
 	return result.Bytes()
 }
+
+// // HashTransaction return a hash of the transaction within a block
+// func (b *Block) HashTransaction() []byte {
+// 		var txHashes [][]byte
+// 		var txHash [32]byte
+
+// 		for _, tx := range b.Transactions {
+
+// 		}
+// }
 
 // NewBlock creates and returns a new Block
 func NewBlock(data string, prevBlockHash []byte) *Block {
