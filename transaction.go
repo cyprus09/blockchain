@@ -12,24 +12,9 @@ import (
 	"log"
 	"math/big"
 	"strings"
-
-	"github.com/gostaticanalysis/nilerr"
 )
 
 const subsidy = 10
-
-// TxInput represents a transaction input
-type TxInput struct {
-	TxId      []byte
-	VOut      int
-	ScriptSig string
-}
-
-// TxOutput represents a transaction output
-type TxOutput struct {
-	Value        int
-	ScriptPubKey string
-}
 
 // Transaction struct represents a Bitcoin transaction
 type Transaction struct {
@@ -133,7 +118,7 @@ func (tx *Transaction) TrimmedCopy() Transaction {
 	}
 
 	for _, VOut := range tx.VOut {
-		outputs := append(outputs, TxOutput{VOut.Value, vout.PubKeyHash})
+		outputs = append(outputs, TxOutput{VOut.Value, VOut.PubKeyHash})
 	}
 
 	txCopy := Transaction{tx.ID, inputs, outputs}
@@ -141,30 +126,72 @@ func (tx *Transaction) TrimmedCopy() Transaction {
 	return txCopy
 }
 
-// SetId sets the transaction ID
-func (tx *Transaction) SetId() {
-	var encoded bytes.Buffer
-	var hashValue [32]byte
-
-	enc := gob.NewEncoder(&encoded)
-	err := enc.Encode(tx)
-	if err != nil {
-		log.Panic(err)
+// Verify verifies signatures of Transaction inputs
+func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
+	if tx.IsCoinbase() {
+		return true
 	}
 
-	hashValue = sha256.Sum256(encoded.Bytes())
-	tx.ID = hashValue[:]
+	for _, VIn := range tx.VIn {
+		if prevTXs[hex.EncodeToString(VIn.TxId)].ID == nil {
+			log.Panic("ERROR: Previous transaction is not correct")
+		}
+	}
+
+	txCopy := tx.TrimmedCopy()
+	curve := elliptic.P256()
+
+	for inID, VIn := range tx.VIn {
+		prevTX := prevTXs[hex.EncodeToString(VIn.TxId)]
+		txCopy.VIn[inID].Signature = nil
+		txCopy.VIn[inID].PubKey = prevTX.VOut[VIn.VOut].PubKeyHash
+		txCopy.ID = txCopy.HashValue()
+		txCopy.VIn[inID].PubKey = nil
+
+		r := big.Int{}
+		s := big.Int{}
+		sigLen := len(VIn.Signature)
+		r.SetBytes(VIn.Signature[:(sigLen / 2)])
+		s.SetBytes(VIn.Signature[(sigLen / 2):])
+
+		x := big.Int{}
+		y := big.Int{}
+		keyLen := len(VIn.PubKey)
+		x.SetBytes(VIn.PubKey[:(keyLen / 2)])
+		y.SetBytes(VIn.PubKey[(keyLen / 2):])
+
+		rawPubKey := ecdsa.PublicKey{curve, &x, &y}
+		if ecdsa.Verify(&rawPubKey, txCopy.ID, &r, &s) == false {
+			return false
+		}
+	}
+	return true
 }
 
-// CanUnlockOutputWith checks whether the address initiated the transaction
-func (in *TxInput) CanUnlockOutputWith(unlockingData string) bool {
-	return in.ScriptSig == unlockingData
-}
+// // SetId sets the transaction ID
+// func (tx *Transaction) SetId() {
+// 	var encoded bytes.Buffer
+// 	var hashValue [32]byte
 
-// CanBeUnlockedWith checks if the output can be unlocked with the provided data
-func (out *TxOutput) CanBeUnlockedWith(unlockingData string) bool {
-	return out.ScriptPubKey == unlockingData
-}
+// 	enc := gob.NewEncoder(&encoded)
+// 	err := enc.Encode(tx)
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+
+// 	hashValue = sha256.Sum256(encoded.Bytes())
+// 	tx.ID = hashValue[:]
+// }
+
+// // CanUnlockOutputWith checks whether the address initiated the transaction
+// func (in *TxInput) CanUnlockOutputWith(unlockingData string) bool {
+// 	return in.ScriptSig == unlockingData
+// }
+
+// // CanBeUnlockedWith checks if the output can be unlocked with the provided data
+// func (out *TxOutput) CanBeUnlockedWith(unlockingData string) bool {
+// 	return out.ScriptPubKey == unlockingData
+// }
 
 // NewCoinbaseTx creates a new coinbase transaction
 func NewCoinbaseTx(to, data string) *Transaction {
@@ -172,11 +199,11 @@ func NewCoinbaseTx(to, data string) *Transaction {
 		data = fmt.Sprintf("Reward to '%s'", to)
 	}
 
-	txIn := TxInput{[]byte{}, -1, data}
-	txOut := TxOutput{subsidy, to}
+	txIn := TxInput{[]byte{}, -1, nil, []byte(data)}
+	txOut := NewTxOutput(subsidy, to)
 
-	tx := Transaction{nil, []TxInput{txIn}, []TxOutput{txOut}}
-	tx.SetId()
+	tx := Transaction{nil, []TxInput{txIn}, []TxOutput{*txOut}}
+	tx.ID = tx.HashValue()
 
 	return &tx
 }
