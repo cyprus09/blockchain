@@ -17,18 +17,18 @@ func (cli *CLI) createBlockchain(address string) {
 	fmt.Println("Blockchain creation successful.")
 }
 
-func (cli *CLI) getBalance(address string) {
-	bc := NewBlockChain(address)
+func (cli *CLI) getBalance(pubKeyHash []byte) {
+	bc := NewBlockChain(pubKeyHash)
 	defer bc.db.Close()
 
 	balance := 0
-	UTXOs := bc.FindUTXO(address)
+	UTXOs := bc.FindUTXO(pubKeyHash)
 
 	for _, out := range UTXOs {
 		balance += out.Value
 	}
 
-	fmt.Printf("Balance of '%s': %d\n", address, balance)
+	fmt.Printf("Balance of '%s': %d\n", pubKeyHash, balance)
 	fmt.Println()
 }
 
