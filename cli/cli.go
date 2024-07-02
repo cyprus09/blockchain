@@ -5,40 +5,22 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"github.com/cyprus09/blockchain/blockchainstruct"
 )
 
 // CLI struct helps process command line arguments
 type CLI struct{}
 
-func (cli *CLI) createBlockchain(address string) {
-	bc := blockchainstruct.CreateBlockchain(address)
-	bc.db.Close()
-	fmt.Println("Blockchain creation successful.")
-}
-
-func (cli *CLI) getBalance(address string) {
-	bc := blockchainstruct.NewBlockChain(address)
-	defer bc.db.Close()
-
-	balance := 0
-	UTXOs := bc.FindUTXO(address)
-
-	for _, out := range UTXOs {
-		balance += out.Value
-	}
-
-	fmt.Printf("Balance of '%s': %d\n", pubKeyHash, balance)
-	fmt.Println()
-}
-
 // printUsage prints all the available commands with their usage
 func (cli *CLI) printUsage() {
 	fmt.Println("Commands:")
-	fmt.Println("  getbalance -address <address>                                   : Get balance of address")
 	fmt.Println("")
 	fmt.Println("  createblockchain -address <address>                             : Create a blockchain and genesis block reward to address")
+	fmt.Println("")
+	fmt.Println(" createwallet                                   : Generates a new key-pair and saves it into the wallet file")
+	fmt.Println("")
+	fmt.Println("  getbalance -address <address>                                   : Get balance of address")
+	fmt.Println("")
+	fmt.Println("  listaddresses                                   : Lists all addresses from the wallet file")
 	fmt.Println("")
 	fmt.Println("  printchain                                                      :  Displays all the blocks in the blockchain in order.")
 	fmt.Println("")
@@ -53,45 +35,14 @@ func (cli *CLI) validateArgs() {
 	}
 }
 
-// printChain iterates through the entire blockchain starting from the tip all the way to the start and prints the values
-func (cli *CLI) printChain() {
-
-	bc := NewBlockChain("")
-	defer bc.db.Close()
-
-	bci := bc.Iterator()
-
-	for {
-		block := bci.Next()
-
-		fmt.Printf("Prev Hash: %x\n", block.PrevBlockHash)
-		fmt.Printf("Current Block Hash: %x\n", block.CurrHash)
-		pow := NewProofOfWork(block)
-		fmt.Printf("Proof of Work: %s\n", strconv.FormatBool(pow.Validate()))
-		fmt.Println()
-
-		if len(block.PrevBlockHash) == 0 {
-			break
-		}
-	}
-}
-
-func (cli *CLI) sendCoin(from, to string, amount int) {
-	bc := NewBlockChain(from)
-	defer bc.db.Close()
-
-	tx := NewUTXOTTransaction(from, to, amount, bc)
-	bc.MineBlock([]*Transaction{tx})
-	fmt.Printf("Success! Coins sent successfuly to '%s'", to)
-	fmt.Println()
-}
-
 // Run parses the cli arguments and processes these commands
 func (cli *CLI) Run() {
 	cli.validateArgs()
 
 	getBalanceCmd := flag.NewFlagSet("getBalance", flag.ExitOnError)
 	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
+	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
+	listAddressesCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
 	sendCoinCmd := flag.NewFlagSet("sendcoin", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printChain", flag.ExitOnError)
 
@@ -109,6 +60,16 @@ func (cli *CLI) Run() {
 		}
 	case "createblockchain":
 		err := createBlockchainCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "createwallet":
+		err := createWalletCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "listaddresses":
+		err := listAddressesCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -141,6 +102,14 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 		cli.createBlockchain(*createBlockchainAddress)
+	}
+
+	if createWalletCmd.Parsed() {
+		cli.createWallet()
+	}
+
+	if listAddressesCmd.Parsed() {
+		cli.listAddresses()
 	}
 
 	if printChainCmd.Parsed() {

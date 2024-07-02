@@ -21,7 +21,7 @@ const (
 // Blockchain keeps a sequence of Blocks in the blockchain
 type Blockchain struct {
 	tip []byte
-	db  *bolt.DB
+	DB  *bolt.DB
 }
 
 // MineBlock saves the provided data as a block in the blockchain
@@ -34,7 +34,7 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) {
 		}
 	}
 
-	err := bc.db.View(func(tx *bolt.Tx) error {
+	err := bc.DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 		lastHash = b.Get([]byte("l"))
 
@@ -46,7 +46,7 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) {
 
 	newBlock := NewBlock(transactions, lastHash)
 
-	err = bc.db.Update(func(tx *bolt.Tx) error {
+	err = bc.DB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 
 		err := b.Put(newBlock.CurrHash, newBlock.SerializeBlock())
@@ -132,7 +132,7 @@ func (bc *Blockchain) FindUTXO(pubKeyHash []byte) []TxOutput {
 
 // Iterator returns a BlockchainIterator
 func (bc *Blockchain) Iterator() *BlockchainIterator {
-	bci := &BlockchainIterator{bc.tip, bc.db}
+	bci := &BlockchainIterator{bc.tip, bc.DB}
 
 	return bci
 }
@@ -191,7 +191,7 @@ func dbExists() bool {
 }
 
 // NewBlockChain creates a new Blockchain with the genesis block
-func NewBlockChain(address string) *Blockchain {
+func NewBlockchain(address string) *Blockchain {
 	if !dbExists() {
 		fmt.Println("No existing blockchain found. Create one first.")
 		os.Exit(1)
