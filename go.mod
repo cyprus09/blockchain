@@ -1,10 +1,10 @@
-module project/blockchain
+module github.com/cyprus09/blockchain
 
-go 1.22.2
-
-require github.com/boltdb/bolt v1.3.1
+go 1.22.4
 
 require (
+	github.com/boltdb/bolt v1.3.1
 	golang.org/x/crypto v0.24.0
-	golang.org/x/sys v0.21.0 // indirect
 )
+
+require golang.org/x/sys v0.21.0 // indirect

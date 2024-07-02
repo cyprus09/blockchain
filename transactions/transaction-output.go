@@ -1,4 +1,4 @@
-package main
+package transactions
 
 import "bytes"
 
@@ -20,8 +20,8 @@ func (out *TxOutput) IsLockedWithKey(pubKeyHash []byte) bool {
 	return bytes.Compare(out.PubKeyHash, pubKeyHash) == 0
 }
 
-// NewTXOutput creates a new TXOutput
-func NewTXOutput(value int, address string) *TxOutput {
+// NewTxOutput creates a new TXOutput
+func NewTxOutput(value int, address string) *TxOutput {
 	txo := &TxOutput{value, nil}
 	txo.Lock([]byte(address))
 
