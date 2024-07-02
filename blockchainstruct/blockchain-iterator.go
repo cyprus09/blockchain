@@ -1,4 +1,4 @@
-package blockchain
+package blockchainstruct
 
 import (
 	"github.com/boltdb/bolt"
