@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"golang.org/x/crypto/ripemd160"
+	"github.com/cyprus09/blockchain/utils"
 )
 
 const version = byte(0x00)
@@ -31,19 +32,19 @@ func NewWallet() *Wallet {
 
 // GetAddress returns the wallet address
 func (w *Wallet) GetAddress() []byte {
-	pubKeyHash := HashPubKey(w.PublicKey)
+	pubKeyHash := w.HashPubKey(w.PublicKey)
 
 	versionPayload := append([]byte{version}, pubKeyHash...)
 	checksum := checksum(versionPayload)
 
 	fullPayload := append(versionPayload, checksum...)
-	address := Base58Encode(fullPayload)
+	address := utils.Base58Encode(fullPayload)
 
 	return address
 }
 
 // HashPubKey hashes a public key
-func HashPubKey(pubKey []byte) []byte {
+func (w *Wallet) HashPubKey(pubKey []byte) []byte {
 	publicSHA256 := sha256.Sum256(pubKey)
 
 	RIPEMD160Hasher := ripemd160.New()
@@ -59,7 +60,7 @@ func HashPubKey(pubKey []byte) []byte {
 
 // ValidateAddress checks if the given address is valid or not
 func ValidateAddress(address string) bool {
-	pubKeyhash := Base58Decode([]byte(address))
+	pubKeyhash := utils.Base58Decode([]byte(address))
 
 	actualChecksum := pubKeyhash[len(pubKeyhash)-addressChecksumLen:]
 	version := pubKeyhash[0]

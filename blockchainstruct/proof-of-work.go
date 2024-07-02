@@ -1,4 +1,4 @@
-package blockchain
+package blockchainstruct
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"github.com/cyprus09/blockchain/utils"
 )
 
 var (
@@ -35,9 +36,9 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 		[][]byte{
 			pow.block.PrevBlockHash,
 			pow.block.HashTransactions(),
-			IntToBytes(pow.block.Timestamp),
-			IntToBytes(int64(targetBits)),
-			IntToBytes(int64(nonce)),
+			utils.IntToBytes(pow.block.Timestamp),
+			utils.IntToBytes(int64(targetBits)),
+			utils.IntToBytes(int64(nonce)),
 		},
 		[]byte{},
 	)

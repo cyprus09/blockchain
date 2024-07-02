@@ -1,6 +1,9 @@
-package transactions
+package blockchainstruct
 
-import "bytes"
+import (
+	"bytes"
+	"github.com/cyprus09/blockchain/utils"
+)
 
 // TxOutput represents a transaction output
 type TxOutput struct {
@@ -10,7 +13,7 @@ type TxOutput struct {
 
 // Lock signs the output
 func (out *TxOutput) Lock(address []byte) {
-	pubKeyHash := Base58Decode(address)
+	pubKeyHash := utils.Base58Decode(address)
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
 	out.PubKeyHash = pubKeyHash
 }

@@ -1,4 +1,4 @@
-package transactions
+package blockchainstruct
 
 import (
 	"bytes"
@@ -12,6 +12,7 @@ import (
 	"log"
 	"math/big"
 	"strings"
+	"github.com/cyprus09/blockchain/wallets"
 )
 
 const subsidy = 10
@@ -188,13 +189,13 @@ func NewUTXOTTransaction(from, to string, amount int, bc *Blockchain) *Transacti
 	var inputs []TxInput
 	var outputs []TxOutput
 
-	wallets, err := NewWallets()
+	wallets, err := wallets.NewWallets()
 	if err != nil {
 		log.Panic(err)
 	}
 
 	wallet := wallets.GetWallet(from)
-	pubKeyHash := HashPubKey(wallet.PublicKey)
+	pubKeyHash := wallet.HashPubKey(wallet.PublicKey)
 	acc, validOutputs := bc.FindSpendableOutputs(pubKeyHash, amount)
 
 	if acc < amount {

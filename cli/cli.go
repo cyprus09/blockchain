@@ -6,23 +6,24 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"github.com/cyprus09/blockchain/blockchainstruct"
 )
 
 // CLI struct helps process command line arguments
 type CLI struct{}
 
 func (cli *CLI) createBlockchain(address string) {
-	bc := CreateBlockchain(address)
+	bc := blockchainstruct.CreateBlockchain(address)
 	bc.db.Close()
 	fmt.Println("Blockchain creation successful.")
 }
 
-func (cli *CLI) getBalance(pubKeyHash []byte) {
-	bc := NewBlockChain(pubKeyHash)
+func (cli *CLI) getBalance(address string) {
+	bc := blockchainstruct.NewBlockChain(address)
 	defer bc.db.Close()
 
 	balance := 0
-	UTXOs := bc.FindUTXO(pubKeyHash)
+	UTXOs := bc.FindUTXO(address)
 
 	for _, out := range UTXOs {
 		balance += out.Value
