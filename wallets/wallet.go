@@ -8,13 +8,15 @@ import (
 	"crypto/sha256"
 	"log"
 
-	"golang.org/x/crypto/ripemd160"
 	"github.com/cyprus09/blockchain/utils"
+	"golang.org/x/crypto/ripemd160"
 )
 
-const version = byte(0x00)
-const walletFile = "wallet.dat"
-const addressChecksumLen = 4
+const (
+	version            = byte(0x00)
+	walletFile         = "wallet.dat"
+	addressChecksumLen = 4
+)
 
 // Wallet stores private and public keys
 type Wallet struct {
