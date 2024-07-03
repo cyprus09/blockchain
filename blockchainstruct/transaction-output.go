@@ -2,6 +2,9 @@ package blockchainstruct
 
 import (
 	"bytes"
+	"encoding/gob"
+	"log"
+
 	"github.com/cyprus09/blockchain/utils"
 )
 
@@ -29,4 +32,35 @@ func NewTxOutput(value int, address string) *TxOutput {
 	txo.Lock([]byte(address))
 
 	return txo
+}
+
+// TxOutputs collects TxOutput
+type TxOutputs struct {
+	Outputs []TxOutput
+}
+
+// SerializeOutputs serializes TxOutputs
+func (outs *TxOutputs) SerializeOutputs() []byte {
+	var buff bytes.Buffer
+
+	enc := gob.NewEncoder(&buff)
+	err := enc.Encode(outs)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return buff.Bytes()
+}
+
+// DeserializeOutputs deserializes TxOutputs
+func DeserializeOutputs(data []byte) TxOutputs {
+	var outputs TxOutputs
+
+	dec := gob.NewDecoder(bytes.NewReader(data))
+	err := dec.Decode(&outputs)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return outputs
 }

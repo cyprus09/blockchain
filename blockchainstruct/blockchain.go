@@ -116,18 +116,47 @@ func (bc *Blockchain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
 }
 
 // FindUTXO finds and returns all unspent transaction outputs
-func (bc *Blockchain) FindUTXO(pubKeyHash []byte) []TxOutput {
-	var UTXOs []TxOutput
-	unspentTransactions := bc.FindUnspentTransactions(pubKeyHash)
+func (bc *Blockchain) FindUTXO() map[string]TxOutputs {
+	UTXO := make(map[string]TxOutputs)
+	spentTXOs := make(map[string][]int)
+	bci := bc.Iterator()
 
-	for _, tx := range unspentTransactions {
-		for _, out := range tx.VOut {
-			if out.IsLockedWithKey(pubKeyHash) {
-				UTXOs = append(UTXOs, out)
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIdx, out := range tx.VOut {
+				// Was the output spent?
+				if spentTXOs[txID] != nil {
+					for _, spentOutIdx := range spentTXOs[txID] {
+						if spentOutIdx == outIdx {
+							continue Outputs
+						}
+					}
+				}
+
+				outs := UTXO[txID]
+				outs.Outputs = append(outs.Outputs, out)
+				UTXO[txID] = outs
+			}
+
+			if tx.IsCoinbase() == false {
+				for _, in := range tx.VIn {
+					inTxID := hex.EncodeToString(in.TxId)
+					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.VOut)
+				}
 			}
 		}
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
 	}
-	return UTXOs
+
+	return UTXO
 }
 
 // Iterator returns a BlockchainIterator

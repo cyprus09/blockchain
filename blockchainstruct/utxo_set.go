@@ -125,7 +125,7 @@ func (u *UTXOSet) Reindex() {
 				log.Panic(err)
 			}
 
-			err = b.Put(key, outs.Serialize())
+			err = b.Put(key, outs.SerializeOutputs())
 			if err != nil {
 				log.Panic(err)
 			}
@@ -147,7 +147,7 @@ func (u *UTXOSet) Update(block *Block) {
 				for _, VIn := range tx.VIn {
 					updatedOutputs := TxOutputs{}
 					outsbytes := b.Get(VIn.TxId)
-					outs := DeserializeOutputs(outbytes)
+					outs := DeserializeOutputs(outsbytes)
 
 					for outIdx, out := range outs.Outputs {
 						if outIdx != VIn.VOut {
@@ -161,7 +161,7 @@ func (u *UTXOSet) Update(block *Block) {
 							log.Panic(err)
 						}
 					} else {
-						err := b.Put(VIn.TxId, updatedOutputs.Serialize())
+						err := b.Put(VIn.TxId, updatedOutputs.SerializeOutputs())
 						if err != nil {
 							log.Panic(err)
 						}
@@ -174,7 +174,7 @@ func (u *UTXOSet) Update(block *Block) {
 				newOutputs.Outputs = append(newOutputs.Outputs, out)
 			}
 
-			err := b.Put(tx.ID, newOutputs.Serialize())
+			err := b.Put(tx.ID, newOutputs.SerializeOutputs())
 			if err != nil {
 				log.Panic(err)
 			}
