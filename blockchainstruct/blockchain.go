@@ -25,7 +25,7 @@ type Blockchain struct {
 }
 
 // MineBlock saves the provided data as a block in the blockchain
-func (bc *Blockchain) MineBlock(transactions []*Transaction) {
+func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
 
 	for _, tx := range transactions {
@@ -67,6 +67,7 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) {
 	if err != nil {
 		log.Panic(err)
 	}
+	return newBlock
 }
 
 // FindUnspentTransactions returns a list of transactions containing unspent outputs
@@ -143,7 +144,7 @@ func (bc *Blockchain) FindUTXO() map[string]TxOutputs {
 				UTXO[txID] = outs
 			}
 
-			if tx.IsCoinbase() == false {
+			if !tx.IsCoinbase() {
 				for _, in := range tx.VIn {
 					inTxID := hex.EncodeToString(in.TxId)
 					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.VOut)
@@ -174,7 +175,7 @@ func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
 		block := bci.Next()
 
 		for _, tx := range block.Transactions {
-			if bytes.Compare(tx.ID, ID) == 0 {
+			if bytes.Equal(tx.ID, ID) {
 				return *tx, nil
 			}
 		}
@@ -195,7 +196,7 @@ func dbExists() bool {
 }
 
 // NewBlockChain creates a new Blockchain with the genesis block
-func NewBlockchain(address string) *Blockchain {
+func NewBlockchain() *Blockchain {
 	if !dbExists() {
 		fmt.Println("No existing blockchain found. Create one first.")
 		os.Exit(1)
@@ -272,6 +273,10 @@ func CreateBlockchain(address string) *Blockchain {
 
 // VerifyTransaction verifies transaction input signatures
 func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
+	if tx.IsCoinbase() {
+		return true
+	}
+
 	prevTXs := make(map[string]Transaction)
 
 	for _, VIn := range tx.VIn {

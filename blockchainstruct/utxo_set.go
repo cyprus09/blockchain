@@ -130,6 +130,10 @@ func (u *UTXOSet) Reindex() {
 				log.Panic(err)
 			}
 		}
+		if err != nil {
+			log.Panic(err)
+		}
+
 		return nil
 	})
 }
@@ -143,7 +147,7 @@ func (u *UTXOSet) Update(block *Block) {
 		b := tx.Bucket([]byte(utxoBucket))
 
 		for _, tx := range block.Transactions {
-			if tx.IsCoinbase() == false {
+			if !tx.IsCoinbase() {
 				for _, VIn := range tx.VIn {
 					updatedOutputs := TxOutputs{}
 					outsbytes := b.Get(VIn.TxId)
@@ -170,9 +174,7 @@ func (u *UTXOSet) Update(block *Block) {
 			}
 
 			newOutputs := TxOutputs{}
-			for _, out := range tx.VOut {
-				newOutputs.Outputs = append(newOutputs.Outputs, out)
-			}
+			newOutputs.Outputs = append(newOutputs.Outputs, tx.VOut...)
 
 			err := b.Put(tx.ID, newOutputs.SerializeOutputs())
 			if err != nil {

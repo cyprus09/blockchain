@@ -14,6 +14,9 @@ func (cli *CLI) createBlockchain(address string) {
 	}
 	bc := blockchainstruct.CreateBlockchain(address)
 	bc.DB.Close()
+
+	UTXOSet := blockchainstruct.UTXOSet{bc}
+	UTXOSet.Reindex()
 	
 	fmt.Println("Done!")
 }

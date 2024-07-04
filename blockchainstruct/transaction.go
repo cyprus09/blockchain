@@ -9,10 +9,10 @@ import (
 	"encoding/gob" //gob is the library used for encoding data (serialisation which can be done through protobufs as well for data streams in binary format
 	"encoding/hex"
 	"fmt"
+	"github.com/cyprus09/blockchain/wallets"
 	"log"
 	"math/big"
 	"strings"
-	"github.com/cyprus09/blockchain/wallets"
 )
 
 const subsidy = 10
@@ -161,8 +161,13 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		x.SetBytes(VIn.PubKey[:(keyLen / 2)])
 		y.SetBytes(VIn.PubKey[(keyLen / 2):])
 
-		rawPubKey := ecdsa.PublicKey{curve, &x, &y}
-		if ecdsa.Verify(&rawPubKey, txCopy.ID, &r, &s) == false {
+		rawPubKey := ecdsa.PublicKey{
+			Curve: curve,
+			X:     &x,
+			Y:     &y,
+		}
+
+		if !ecdsa.Verify(&rawPubKey, txCopy.ID, &r, &s) {
 			return false
 		}
 	}
