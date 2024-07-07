@@ -16,6 +16,7 @@ type Block struct {
 	PrevBlockHash []byte
 	CurrHash      []byte
 	Nonce         int
+	Height        int
 }
 
 // Deprecated: SetHash calculates the hash of the current block
@@ -41,20 +42,20 @@ func (b *Block) HashTransactions() []byte {
 }
 
 // NewBlock creates and returns a new Block
-func NewBlock(transactions []*Transaction, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), transactions, prevBlockHash, []byte{}, 0}
+func NewBlock(transactions []*Transaction, prevBlockHash []byte, height int) *Block {
+	block := &Block{time.Now().Unix(), transactions, prevBlockHash, []byte{}, 0, height}
 	pow := NewProofOfWork(block)
 	nonce, currHash := pow.Run()
-	
+
 	block.CurrHash = currHash[:]
 	block.Nonce = nonce
-	
+
 	return block
 }
 
 // NewGenesisBlock creates and returns the genesis block (first block of the blockchain)
 func NewGenesisBlock(coinbase *Transaction) *Block {
-	return NewBlock([]*Transaction{coinbase}, []byte{})
+	return NewBlock([]*Transaction{coinbase}, []byte{}, 0)
 }
 
 // SerializeBlock serializes the value of the block to be able to store in BoltDb
@@ -73,7 +74,7 @@ func (b *Block) SerializeBlock() []byte {
 // DeserializeBlock deserializes the block value got from the db
 func DeserializeBlock(d []byte) *Block {
 	var block Block
-	
+
 	decoder := gob.NewDecoder(bytes.NewReader(d))
 	err := decoder.Decode(&block)
 	if err != nil {

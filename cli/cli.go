@@ -14,19 +14,21 @@ type CLI struct{}
 func (cli *CLI) printUsage() {
 	fmt.Println("Commands:")
 	fmt.Println("")
-	fmt.Println("  createblockchain -address <address>                             : Create a blockchain and genesis block reward to address")
+	fmt.Println("  createblockchain -address <address>                                   : Create a blockchain and genesis block reward to address")
 	fmt.Println("")
-	fmt.Println("  printchain                                                      :  Displays all the blocks in the blockchain in order.")
+	fmt.Println("  printchain                                                            :  Displays all the blocks in the blockchain in order.")
 	fmt.Println("")
-	fmt.Println("  createwallet                                                    : Generates a new key-pair and saves it into the wallet file")
+	fmt.Println("  createwallet                                                          : Generates a new key-pair and saves it into the wallet file")
 	fmt.Println("")
-	fmt.Println("  listaddresses                                                   : Lists all addresses from the wallet file")
+	fmt.Println("  listaddresses                                                         : Lists all addresses from the wallet file")
 	fmt.Println("")
-	fmt.Println("  getbalance -address <address>                                   : Get balance of address")
+	fmt.Println("  getbalance -address <address>                                         : Get balance of address")
 	fmt.Println("")
 	fmt.Println("  reindexutxo                                                     : Rebuilds the UTXO set")
 	fmt.Println("")
-	fmt.Println("  sendcoin -from <from_address> -to <to_address> -amount <amount> : Send amount of coins from from_address to to_address")
+	fmt.Println("  sendcoin -from <from_address> -to <to_address> -amount <amount> -mine : Send amount of coins from from_address to to_address. Mine on the same node, when -mine is set.")
+	fmt.Println("")
+	fmt.Println(" startnode -miner <address> : Start a node with ID specified in nodeID env. var. -miner enables mining")
 }
 
 // validateArgs helps in validating the number of arguments within the cli
@@ -41,6 +43,12 @@ func (cli *CLI) validateArgs() {
 func (cli *CLI) Run() {
 	cli.validateArgs()
 
+	nodeID := os.Getenv("NODE_ID")
+	if nodeID == "" {
+		log.Panic("NODE_ID env. var is not set!")
+		os.Exit(1)
+	}
+
 	getBalanceCmd := flag.NewFlagSet("getBalance", flag.ExitOnError)
 	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
@@ -54,6 +62,8 @@ func (cli *CLI) Run() {
 	sendFrom := sendCoinCmd.String("from", "", "Source wallet address")
 	sendTo := sendCoinCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCoinCmd.Int("amount", 0, "Amount to send")
+	sendMine := sendCoinCmd.Bool("mine", false, "Mine immediately on the same node")
+	starNodeMiner := startNodeCmd.String("miner", "", "Enable mining node and send reward to <address>")
 
 	switch os.Args[1] {
 	case "getbalance":
@@ -81,13 +91,18 @@ func (cli *CLI) Run() {
 		if err != nil {
 			log.Panic(err)
 		}
+	case "reindexutxo":
+		err := reindexUTXOCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
 	case "sendcoin":
 		err := sendCoinCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
-	case "reindexutxo":
-		err := reindexUTXOCmd.Parse(os.Args[2:])
+	case "startnode":
+		err := startNodeCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -101,7 +116,7 @@ func (cli *CLI) Run() {
 			getBalanceCmd.Usage()
 			os.Exit(1)
 		}
-		cli.getBalance(*getBalanceAddress)
+		cli.getBalance(*getBalanceAddress, nodeID)
 	}
 
 	if createBlockchainCmd.Parsed() {
@@ -109,23 +124,23 @@ func (cli *CLI) Run() {
 			createBlockchainCmd.Usage()
 			os.Exit(1)
 		}
-		cli.createBlockchain(*createBlockchainAddress)
+		cli.createBlockchain(*createBlockchainAddress, nodeID)
 	}
 
 	if createWalletCmd.Parsed() {
-		cli.createWallet()
+		cli.createWallet(nodeID)
 	}
 
 	if listAddressesCmd.Parsed() {
-		cli.listAddresses()
+		cli.listAddresses(nodeID)
 	}
 
 	if printChainCmd.Parsed() {
-		cli.printChain()
+		cli.printChain(nodeID)
 	}
 
 	if reindexUTXOCmd.Parsed() {
-		cli.reindexUTXO()
+		cli.reindexUTXO(nodeID)
 	}
 
 	if sendCoinCmd.Parsed() {
@@ -133,6 +148,15 @@ func (cli *CLI) Run() {
 			sendCoinCmd.Usage()
 			os.Exit(1)
 		}
-		cli.sendCoin(*sendFrom, *sendTo, *sendAmount)
+		cli.sendCoin(*sendFrom, *sendTo, *sendAmount, nodeID, *sendMine)
+	}
+
+	if startNodeCmd.Parsed() {
+		nodeID := os.Getenv("NODE_ID")
+		if nodeID == "" {
+			startNodeCmd.Usage()
+			os.Exit(1)
+		}
+		cli.startnode(nodeID, *startNodeMiner)
 	}
 }

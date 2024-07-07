@@ -8,7 +8,7 @@ import (
 	"github.com/cyprus09/blockchain/wallets"
 )
 
-func (cli *CLI) createBlockchain(address string) {
+func (cli *CLI) createBlockchain(address string, nodeID) {
 	if !wallets.ValidateAddress(address) {
 		log.Panic("ERROR: Address is not valid")
 	}

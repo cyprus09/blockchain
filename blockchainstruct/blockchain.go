@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	dbFile              = "blockchain.db"
+	dbFile              = "blockchain_%s.db"
 	blocksBucket        = "blocks"
 	genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 )
@@ -24,7 +24,7 @@ type Blockchain struct {
 	DB  *bolt.DB
 }
 
-func dbExists() bool {
+func dbExists(dbFile string) bool {
 	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
 		return false
 	}
@@ -35,8 +35,10 @@ func dbExists() bool {
 // MineBlock saves the provided data as a block in the blockchain
 func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
+	var lastHeight int
 
 	for _, tx := range transactions {
+		// TODO: ignore transaction if it's not valid
 		if !bc.VerifyTransaction(tx) {
 			log.Panic("ERROR: Invalid transaction")
 		}
@@ -46,13 +48,18 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 		b := tx.Bucket([]byte(blocksBucket))
 		lastHash = b.Get([]byte("l"))
 
+		blockData := b.Get(lastHash)
+		block := DeserializeBlock(blockData)
+
+		lastHeight = block.Height
+
 		return nil
 	})
 	if err != nil {
 		log.Panic(err)
 	}
 
-	newBlock := NewBlock(transactions, lastHash)
+	newBlock := NewBlock(transactions, lastHash, lastHeight + 1)
 
 	err = bc.DB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
@@ -150,8 +157,9 @@ func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
 }
 
 // NewBlockChain creates a new Blockchain with the genesis block
-func NewBlockchain() *Blockchain {
-	if !dbExists() {
+func NewBlockchain(nodeID string) *Blockchain {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+	if !dbExists(dbFile) {
 		fmt.Println("No existing blockchain found. Create one first.")
 		os.Exit(1)
 	}
@@ -180,8 +188,9 @@ func NewBlockchain() *Blockchain {
 }
 
 // CreateBlockchain creates a new blockchain DB
-func CreateBlockchain(address string) *Blockchain {
-	if dbExists() {
+func CreateBlockchain(address, nodeID string) *Blockchain {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+	if dbExists(dbFile) {
 		fmt.Println("Blockchain already exists.")
 		os.Exit(1)
 	}
@@ -223,6 +232,96 @@ func CreateBlockchain(address string) *Blockchain {
 	bc := Blockchain{tip, db}
 
 	return &bc
+}
+
+// AddBlock saves the block into the blockchain
+func (bc *Blockchain) AddBlock(block *Block) {
+	err := bc.DB.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		blockInDb := b.Get(block.CurrHash)
+
+		if blockInDb != nil {
+			return nil
+		}
+
+		blockData := block.SerializeBlock()
+		err := b.Put(block.CurrHash, blockData)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		lastHash := b.Get([]byte("l"))
+		lastBlockData := b.Get(lastHash)
+		lastBlock := DeserializeBlock(lastBlockData)
+
+		if block.Height > lastBlock.Height {
+			err = b.Put([]byte("l"), block.CurrHash)
+			if err != nil {
+				log.Panic(err)
+			}
+			bc.tip = block.CurrHash
+		}
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+// GetBestHeight returns the height of the latest block
+func (bc *Blockchain) GetBestHeight() int {
+	var lastBlock Block
+
+	err := bc.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		lastHash := b.Get([]byte("l"))
+		blockData := b.Get(lastHash)
+		lastBlock = *DeserializeBlock(blockData)
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return lastBlock.Height
+}
+
+// GetBlock finds a block by its hash and returns it
+func (bc *Blockchain) GetBlock(blockHash []byte) (Block, error) {
+	var block Block
+
+	err := bc.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+
+		blockData := b.Get(blockHash)
+		if blockData == nil {
+			return errors.New("Block is not found.")
+		}
+		block = *DeserializeBlock(blockData)
+
+		return nil
+	})
+	if err != nil {
+		return block, err
+	}
+	return block, nil
+}
+
+// GetBlockHashes returns a list of hashes of all the blocks in the chain
+func (bc *Blockchain) GetBlockHashes() [][]byte {
+	var blocks [][]byte
+	bci := bc.Iterator()
+
+	for {
+		block := bci.Next()
+		blocks = append(blocks, block.CurrHash)
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+	}
+	return blocks
 }
 
 // VerifyTransaction verifies transaction input signatures
