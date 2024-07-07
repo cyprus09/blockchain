@@ -6,10 +6,10 @@ import (
 	"github.com/cyprus09/blockchain/wallets"
 )
 
-func (cli *CLI) createWallet() {
-	wallets, _ := wallets.NewWallets()
+func (cli *CLI) createWallet(nodeID string) {
+	wallets, _ := wallets.NewWallets(nodeID)
 	address := wallets.CreateWallet()
-	wallets.SaveToFile()
+	wallets.SaveToFile(nodeID)
 
 	fmt.Printf("Your new address: %s\n", address)
 }

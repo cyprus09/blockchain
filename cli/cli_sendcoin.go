@@ -8,7 +8,7 @@ import (
 	"github.com/cyprus09/blockchain/wallets"
 )
 
-func (cli *CLI) sendCoin(from, to string, amount int) {
+func (cli *CLI) sendCoin(from, to string, amount int, nodeID string, mineNow bool) {
 	if !wallets.ValidateAddress(from) {
 		log.Panic("ERROR: Sender Address is not valid")
 	}
@@ -17,16 +17,27 @@ func (cli *CLI) sendCoin(from, to string, amount int) {
 		log.Panic("ERROR: Recipient Address is not valid")
 	}
 
-	bc := blockchainstruct.NewBlockchain()
+	bc := blockchainstruct.NewBlockchain(nodeID)
 	UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}
 	defer bc.DB.Close()
 
-	tx := blockchainstruct.NewUTXOTTransaction(from, to, amount, &UTXOSet)
-	cbTx := blockchainstruct.NewCoinbaseTx(from, "")
-	txs := []*blockchainstruct.Transaction{cbTx, tx}
+	wallets, err := wallets.NewWallets(nodeId)
+	if err != nil {
+		log.Panic(err)
+	}
+	wallet := wallets.GetWallet(from)
 
-	newBlock := bc.MineBlock(txs)
-	UTXOSet.Update(newBlock)
+	tx := blockchainstruct.NewUTXOTTransaction(&wallet, to, amount, &UTXOSet)
+
+	if mineNow {
+		cbTx := blockchainstruct.NewCoinbaseTx(from, "")
+		txs := []*blockchainstruct.Transaction{cbTx, tx}
+	
+		newBlock := bc.MineBlock(txs)
+		UTXOSet.Update(newBlock)
+	}else {
+		sendTx(knownNodes[0], tx)
+	}
 	
 	fmt.Printf("Success sent %d coins from %s to %s\n", amount, from, to)
 }

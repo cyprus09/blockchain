@@ -6,8 +6,8 @@ import (
 	"github.com/cyprus09/blockchain/blockchainstruct"
 )
 
-func (cli *CLI) reindexUTXO() {
-	bc := blockchainstruct.NewBlockchain()
+func (cli *CLI) reindexUTXO(nodeID string) {
+	bc := blockchainstruct.NewBlockchain(nodeID)
 	UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}
 	UTXOSet.Reindex()
 

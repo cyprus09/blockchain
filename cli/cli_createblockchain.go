@@ -8,11 +8,11 @@ import (
 	"github.com/cyprus09/blockchain/wallets"
 )
 
-func (cli *CLI) createBlockchain(address string, nodeID) {
+func (cli *CLI) createBlockchain(address string, nodeID string) {
 	if !wallets.ValidateAddress(address) {
 		log.Panic("ERROR: Address is not valid")
 	}
-	bc := blockchainstruct.CreateBlockchain(address)
+	bc := blockchainstruct.CreateBlockchain(address, nodeID)
 	defer bc.DB.Close()
 
 	UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}

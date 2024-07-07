@@ -9,12 +9,12 @@ import (
 	"github.com/cyprus09/blockchain/wallets"
 )
 
-func (cli *CLI) getBalance(address string) {
+func (cli *CLI) getBalance(address string, nodeID string) {
 	if !wallets.ValidateAddress(address) {
 		log.Panic("ERROR: Address is not valid")
 	}
 
-	bc := blockchainstruct.NewBlockchain()
+	bc := blockchainstruct.NewBlockchain(nodeID)
 	UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}
 	defer bc.DB.Close()
 
