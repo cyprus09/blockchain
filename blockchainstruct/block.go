@@ -2,10 +2,11 @@ package blockchainstruct
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/gob" //gob is the library used for encoding data (serialisation which can be done through protobufs as well for data streams in binary format
 	"log"
 	"time"
+
+	"github.com/cyprus09/blockchain/merkletree"
 )
 
 // Block struct helps define the structure of a block
@@ -27,19 +28,16 @@ type Block struct {
 // 	b.CurrHash = hash[:]
 // }
 
-
 // HashTransaction return a hash of the transaction within a block
 func (b *Block) HashTransactions() []byte {
-	var txHashes [][]byte
-	var txHash [32]byte
-	
+	var transactions [][]byte
+
 	for _, tx := range b.Transactions {
-		txHashes = append(txHashes, tx.ID)
+		transactions = append(transactions, tx.Serialize())
 	}
-	
-	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
-	
-	return txHash[:]
+	mTree := merkletree.NewMerkleTree(transactions)
+
+	return mTree.RootNode.Data
 }
 
 // NewBlock creates and returns a new Block

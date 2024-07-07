@@ -17,12 +17,16 @@ func (cli *CLI) sendCoin(from, to string, amount int) {
 		log.Panic("ERROR: Recipient Address is not valid")
 	}
 
-	bc := blockchainstruct.NewBlockchain(from)
+	bc := blockchainstruct.NewBlockchain()
+	UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}
 	defer bc.DB.Close()
 
-	tx := blockchainstruct.NewUTXOTTransaction(from, to, amount, bc)
-	bc.MineBlock([]*blockchainstruct.Transaction{tx})
+	tx := blockchainstruct.NewUTXOTTransaction(from, to, amount, &UTXOSet)
+	cbTx := blockchainstruct.NewCoinbaseTx(from, "")
+	txs := []*blockchainstruct.Transaction{cbTx, tx}
+
+	newBlock := bc.MineBlock(txs)
+	UTXOSet.Update(newBlock)
 	
-	fmt.Printf("Success sent %d coins from %s to %s", amount, from, to)
-	fmt.Println()	
+	fmt.Printf("Success sent %d coins from %s to %s\n", amount, from, to)
 }

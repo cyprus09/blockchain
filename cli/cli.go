@@ -18,11 +18,13 @@ func (cli *CLI) printUsage() {
 	fmt.Println("")
 	fmt.Println("  printchain                                                      :  Displays all the blocks in the blockchain in order.")
 	fmt.Println("")
-	fmt.Println("  createwallet                                                     : Generates a new key-pair and saves it into the wallet file")
+	fmt.Println("  createwallet                                                    : Generates a new key-pair and saves it into the wallet file")
 	fmt.Println("")
 	fmt.Println("  listaddresses                                                   : Lists all addresses from the wallet file")
 	fmt.Println("")
 	fmt.Println("  getbalance -address <address>                                   : Get balance of address")
+	fmt.Println("")
+	fmt.Println("  reindexutxo                                                     : Rebuilds the UTXO set")
 	fmt.Println("")
 	fmt.Println("  sendcoin -from <from_address> -to <to_address> -amount <amount> : Send amount of coins from from_address to to_address")
 }
@@ -44,7 +46,8 @@ func (cli *CLI) Run() {
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 	listAddressesCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
 	sendCoinCmd := flag.NewFlagSet("sendcoin", flag.ExitOnError)
-	printChainCmd := flag.NewFlagSet("printChain", flag.ExitOnError)
+	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
+	reindexUTXOCmd := flag.NewFlagSet("reindexutxo", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
@@ -73,13 +76,18 @@ func (cli *CLI) Run() {
 		if err != nil {
 			log.Panic(err)
 		}
-	case "printChain":
+	case "printchain":
 		err := printChainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
 	case "sendcoin":
 		err := sendCoinCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "reindexutxo":
+		err := reindexUTXOCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -114,6 +122,10 @@ func (cli *CLI) Run() {
 
 	if printChainCmd.Parsed() {
 		cli.printChain()
+	}
+
+	if reindexUTXOCmd.Parsed() {
+		cli.reindexUTXO()
 	}
 
 	if sendCoinCmd.Parsed() {

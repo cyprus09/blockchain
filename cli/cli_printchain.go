@@ -10,7 +10,7 @@ import (
 // printChain iterates through the entire blockchain starting from the tip all the way to the start and prints the values
 func (cli *CLI) printChain() {
 
-	bc := blockchainstruct.NewBlockchain("")
+	bc := blockchainstruct.NewBlockchain()
 	defer bc.DB.Close()
 
 	bci := bc.Iterator()

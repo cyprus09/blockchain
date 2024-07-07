@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"github.com/cyprus09/blockchain/utils"
 	"math"
 	"math/big"
-	"github.com/cyprus09/blockchain/utils"
 )
 
 var (
 	maxNonce = math.MaxInt64
 )
 
-const targetBits = 24
+const targetBits = 16
 
 // ProofOfWork represents proof-of-work for a blockchain
 type ProofOfWork struct {

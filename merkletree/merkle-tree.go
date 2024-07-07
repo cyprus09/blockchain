@@ -50,6 +50,10 @@ func NewMerkleNode(left, right *MerkleNode, data []byte) *MerkleNode {
 	if left == nil && right == nil {
 		hashValue := sha256.Sum256(data)
 		mNode.Data = hashValue[:]
+	} else {
+		prevHashes := append(left.Data, right.Data...)
+		hashValue := sha256.Sum256(prevHashes)
+		mNode.Data = hashValue[:]
 	}
 
 	mNode.Left = left
