@@ -24,6 +24,14 @@ type Blockchain struct {
 	DB  *bolt.DB
 }
 
+func dbExists() bool {
+	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+}
+
 // MineBlock saves the provided data as a block in the blockchain
 func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
@@ -68,52 +76,6 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 		log.Panic(err)
 	}
 	return newBlock
-}
-
-// FindUnspentTransactions returns a list of transactions containing unspent outputs
-func (bc *Blockchain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
-	var unspentTXs []Transaction
-	spentTXOs := make(map[string][]int)
-	bci := bc.Iterator()
-
-	for {
-		block := bci.Next()
-
-		for _, tx := range block.Transactions {
-			txID := hex.EncodeToString(tx.ID)
-
-		Outputs:
-			for outIdx, out := range tx.VOut {
-				// Check if the output was spent or not
-				if spentTXOs[txID] != nil {
-					for _, spentOut := range spentTXOs[txID] {
-						if spentOut == outIdx {
-							continue Outputs
-						}
-					}
-				}
-
-				if out.IsLockedWithKey(pubKeyHash) {
-					unspentTXs = append(unspentTXs, *tx)
-				}
-			}
-
-			if !tx.IsCoinbase() {
-				for _, in := range tx.VIn {
-					if in.UsesKey(pubKeyHash) {
-						inTxID := hex.EncodeToString(in.TxId)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.VOut)
-					}
-				}
-			}
-		}
-
-		if len(block.PrevBlockHash) == 0 {
-			break
-		}
-	}
-
-	return unspentTXs
 }
 
 // FindUTXO finds and returns all unspent transaction outputs
@@ -185,14 +147,6 @@ func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
 		}
 	}
 	return Transaction{}, errors.New("Transaction not found.")
-}
-
-func dbExists() bool {
-	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
-		return false
-	}
-
-	return true
 }
 
 // NewBlockChain creates a new Blockchain with the genesis block
@@ -302,3 +256,49 @@ func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey)
 	}
 	tx.Sign(privKey, prevTXs)
 }
+
+// Deprecated: defined utxo_set separately which takes care of FindUnspentTransactions returns a list of transactions containing unspent outputs
+// func (bc *Blockchain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
+// 	var unspentTXs []Transaction
+// 	spentTXOs := make(map[string][]int)
+// 	bci := bc.Iterator()
+
+// 	for {
+// 		block := bci.Next()
+
+// 		for _, tx := range block.Transactions {
+// 			txID := hex.EncodeToString(tx.ID)
+
+// 		Outputs:
+// 			for outIdx, out := range tx.VOut {
+// 				// Check if the output was spent or not
+// 				if spentTXOs[txID] != nil {
+// 					for _, spentOut := range spentTXOs[txID] {
+// 						if spentOut == outIdx {
+// 							continue Outputs
+// 						}
+// 					}
+// 				}
+
+// 				if out.IsLockedWithKey(pubKeyHash) {
+// 					unspentTXs = append(unspentTXs, *tx)
+// 				}
+// 			}
+
+// 			if !tx.IsCoinbase() {
+// 				for _, in := range tx.VIn {
+// 					if in.UsesKey(pubKeyHash) {
+// 						inTxID := hex.EncodeToString(in.TxId)
+// 						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.VOut)
+// 					}
+// 				}
+// 			}
+// 		}
+
+// 		if len(block.PrevBlockHash) == 0 {
+// 			break
+// 		}
+// 	}
+
+// 	return unspentTXs
+// }

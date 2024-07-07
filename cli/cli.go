@@ -46,7 +46,7 @@ func (cli *CLI) Run() {
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 	listAddressesCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
 	sendCoinCmd := flag.NewFlagSet("sendcoin", flag.ExitOnError)
-	printChainCmd := flag.NewFlagSet("printChain", flag.ExitOnError)
+	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	reindexUTXOCmd := flag.NewFlagSet("reindexutxo", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
@@ -76,7 +76,7 @@ func (cli *CLI) Run() {
 		if err != nil {
 			log.Panic(err)
 		}
-	case "printChain":
+	case "printchain":
 		err := printChainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)

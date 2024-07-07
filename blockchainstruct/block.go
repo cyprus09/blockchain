@@ -28,7 +28,6 @@ type Block struct {
 // 	b.CurrHash = hash[:]
 // }
 
-
 // HashTransaction return a hash of the transaction within a block
 func (b *Block) HashTransactions() []byte {
 	var transactions [][]byte

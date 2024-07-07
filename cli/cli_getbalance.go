@@ -28,6 +28,5 @@ func (cli *CLI) getBalance(address string) {
 		balance += out.Value
 	}
 
-	fmt.Printf("Balance of '%x': %d\n", address, balance)
-	fmt.Println()
+	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }

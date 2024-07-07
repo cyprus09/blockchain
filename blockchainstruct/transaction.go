@@ -85,24 +85,25 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transac
 	}
 }
 
+// String returns a human readable representation of a transaction
 func (tx Transaction) String() string {
 	var lines []string
 
-	lines = append(lines, fmt.Sprintf("--- Transaction %x", tx.ID))
+	lines = append(lines, fmt.Sprintf("------ Transaction %x", tx.ID))
 
 	for i, input := range tx.VIn {
 
-		lines = append(lines, fmt.Sprintf("     Input %d:", i))
-		lines = append(lines, fmt.Sprintf("       TXID:      %x", input.TxId))
-		lines = append(lines, fmt.Sprintf("       Out:       %d", input.VOut))
+		lines = append(lines, fmt.Sprintf("       Input %d  : ", i))
+		lines = append(lines, fmt.Sprintf("       TXID     : %x", input.TxId))
+		lines = append(lines, fmt.Sprintf("       Out      : %d", input.VOut))
 		lines = append(lines, fmt.Sprintf("       Signature: %x", input.Signature))
-		lines = append(lines, fmt.Sprintf("       PubKey:    %x", input.PubKey))
+		lines = append(lines, fmt.Sprintf("       PubKey   : %x", input.PubKey))
 	}
 
 	for i, output := range tx.VOut {
-		lines = append(lines, fmt.Sprintf("     Output %d:", i))
-		lines = append(lines, fmt.Sprintf("       Value:  %d", output.Value))
-		lines = append(lines, fmt.Sprintf("       Script: %x", output.PubKeyHash))
+		lines = append(lines, fmt.Sprintf("       Output %d : ", i))
+		lines = append(lines, fmt.Sprintf("       Value    : %d", output.Value))
+		lines = append(lines, fmt.Sprintf("       Script   : %x", output.PubKeyHash))
 	}
 
 	return strings.Join(lines, "\n")
@@ -177,7 +178,12 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 // NewCoinbaseTx creates a new coinbase transaction
 func NewCoinbaseTx(to, data string) *Transaction {
 	if data == "" {
-		data = fmt.Sprintf("Reward to '%s'", to)
+		randData := make([]byte, 20)
+		_, err := rand.Read(randData)
+		if err != nil {
+			log.Panic(err)
+		}
+		data = fmt.Sprintf("%s", randData)
 	}
 
 	txIn := TxInput{[]byte{}, -1, nil, []byte(data)}
