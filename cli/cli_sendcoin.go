@@ -17,11 +17,17 @@ func (cli *CLI) sendCoin(from, to string, amount int, nodeID string, mineNow boo
 		log.Panic("ERROR: Recipient Address is not valid")
 	}
 
+	if to == from {
+		log.Panic("ERROR: You cannot send coins to yourself")
+	} else if from == to {
+		log.Panic("ERROR: You cannot send coins to yourself")
+	}
+
 	bc := blockchainstruct.NewBlockchain(nodeID)
 	UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}
 	defer bc.DB.Close()
 
-	wallets, err := wallets.NewWallets(nodeId)
+	wallets, err := wallets.NewWallets(nodeID)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -32,12 +38,12 @@ func (cli *CLI) sendCoin(from, to string, amount int, nodeID string, mineNow boo
 	if mineNow {
 		cbTx := blockchainstruct.NewCoinbaseTx(from, "")
 		txs := []*blockchainstruct.Transaction{cbTx, tx}
-	
+
 		newBlock := bc.MineBlock(txs)
 		UTXOSet.Update(newBlock)
-	}else {
+	} else {
 		sendTx(knownNodes[0], tx)
 	}
-	
+
 	fmt.Printf("Success sent %d coins from %s to %s\n", amount, from, to)
 }

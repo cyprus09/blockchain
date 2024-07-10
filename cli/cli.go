@@ -54,6 +54,7 @@ func (cli *CLI) Run() {
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 	listAddressesCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
 	sendCoinCmd := flag.NewFlagSet("sendcoin", flag.ExitOnError)
+	startNodeCmd := flag.NewFlagSet("startnode", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	reindexUTXOCmd := flag.NewFlagSet("reindexutxo", flag.ExitOnError)
 
@@ -63,7 +64,7 @@ func (cli *CLI) Run() {
 	sendTo := sendCoinCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCoinCmd.Int("amount", 0, "Amount to send")
 	sendMine := sendCoinCmd.Bool("mine", false, "Mine immediately on the same node")
-	starNodeMiner := startNodeCmd.String("miner", "", "Enable mining node and send reward to <address>")
+	startNodeMiner := startNodeCmd.String("miner", "", "Enable mining node and send reward to <address>")
 
 	switch os.Args[1] {
 	case "getbalance":
@@ -157,6 +158,6 @@ func (cli *CLI) Run() {
 			startNodeCmd.Usage()
 			os.Exit(1)
 		}
-		cli.startnode(nodeID, *startNodeMiner)
+		cli.startNode(nodeID, *startNodeMiner)
 	}
 }
