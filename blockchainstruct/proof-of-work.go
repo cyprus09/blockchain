@@ -13,7 +13,7 @@ var (
 	maxNonce = math.MaxInt64
 )
 
-const targetBits = 16
+const targetBits = 20
 
 // ProofOfWork represents proof-of-work for a blockchain
 type ProofOfWork struct {

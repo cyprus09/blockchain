@@ -7,8 +7,8 @@ import (
 	"github.com/cyprus09/blockchain/wallets"
 )
 
-func (cli *CLI) listAddresses() {
-	wallets, err := wallets.NewWallets()
+func (cli *CLI) listAddresses(nodeID string) {
+	wallets, err := wallets.NewWallets(nodeID)
 	if err != nil {
 		log.Panic(err)
 	}
