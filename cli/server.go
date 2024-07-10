@@ -80,7 +80,7 @@ func bytesToCommand(bytes []byte) string {
 			command = append(command, b)
 		}
 	}
-	return fmt.Sprintf("%s", command)
+	return string(command)
 }
 
 func extractCommand(request []byte) []byte {
@@ -93,6 +93,7 @@ func requestBlocks() {
 	}
 }
 
+//lint:ignore U1000 Ignore unused function
 func sendAddress(addr string) {
 	nodes := address{knownNodes}
 	nodes.AddrList = append(nodes.AddrList, nodeAddress)
@@ -210,7 +211,7 @@ func handleBlock(request []byte, bc *blockchainstruct.Blockchain) {
 
 		blocksInTransit = blocksInTransit[1:]
 	} else {
-		UTXOSet := blockchainstruct.UTXOSet{bc}
+		UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}
 		UTXOSet.Reindex()
 	}
 }
@@ -235,7 +236,7 @@ func handleInv(request []byte, bc *blockchainstruct.Blockchain) {
 
 		newInTransit := [][]byte{}
 		for _, b := range blocksInTransit {
-			if bytes.Compare(b, blockHash) != 0 {
+			if !bytes.Equal(b, blockHash) {
 				newInTransit = append(newInTransit, b)
 			}
 		}
@@ -336,7 +337,7 @@ func handleTx(request []byte, bc *blockchainstruct.Blockchain) {
 			txs = append(txs, cbTX)
 
 			newBlock := bc.MineBlock(txs)
-			UTXOSet := blockchainstruct.UTXOSet{bc}
+			UTXOSet := blockchainstruct.UTXOSet{Blockchain: bc}
 			UTXOSet.Reindex()
 
 			fmt.Println("New block is mined!")
@@ -389,7 +390,7 @@ func handleConnenction(conn net.Conn, bc *blockchainstruct.Blockchain) {
 	if err != nil {
 		log.Panic(err)
 	}
-	command := bytesToCommand(request[:commandLen])
+	command := bytesToCommand(extractCommand(request))
 	fmt.Printf("Receieved %s command\n", command)
 
 	switch command {

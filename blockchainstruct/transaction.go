@@ -198,7 +198,7 @@ func NewCoinbaseTx(to, data string) *Transaction {
 		if err != nil {
 			log.Panic(err)
 		}
-		data = fmt.Sprintf("%s", randData)
+		data = string(randData)
 	}
 
 	txIn := TxInput{[]byte{}, -1, nil, []byte(data)}
@@ -236,7 +236,7 @@ func NewUTXOTTransaction(wallet *wallets.Wallet, to string, amount int, UTXOSet 
 	}
 
 	// Build a list of outputs
-	from := fmt.Sprintf("%s", wallet.GetAddress())
+	from := string(wallet.GetAddress())
 	outputs = append(outputs, *NewTxOutput(amount, to))
 	if acc > amount {
 		// generate change
