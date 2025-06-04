@@ -45,5 +45,5 @@ func (cli *CLI) sendCoin(from, to string, amount int, nodeID string, mineNow boo
 		sendTx(knownNodes[0], tx)
 	}
 
-	fmt.Printf("Success sent %d coins from %s to %s\n", amount, from, to)
+	fmt.Printf("Success! sent %d coins from %s to %s\n", amount, from, to)
 }
